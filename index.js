@@ -40,6 +40,8 @@ const zlib         = require('zlib');
  // and may log errors.
  // They need to be tested, so they shouldn't have side effects on load.
  const brotli = brotliCompat();
+ let useZopfliForGzip = true;
+ let   zopfli = zopfliCompat(useZopfliForGzip);
 
 /**
  * Module exports.
@@ -52,8 +54,6 @@ module.exports.filter = shouldCompress;
  * Module variables.
  * @private
  */
-
-let useZopfliForGzip = true;
 
 const cacheControlNoTransformRegExp = /(?:^|,)\s*?no-transform\s*?(?:,|$)/;
 // according to https://blogs.akamai.com/2016/02/understanding-brotlis-potential.html , brotli:4
@@ -78,7 +78,7 @@ function compression(options) {
 
   // options
   useZopfliForGzip = opts.useZopfliForGzip || useZopfliForGzip;
-  const zopfli = zopfliCompat(useZopfliForGzip);
+  zopfli = zopfliCompat(useZopfliForGzip);
   const filter  = opts.filter || shouldCompress;
   let threshold = bytes.parse(opts.threshold);
 
