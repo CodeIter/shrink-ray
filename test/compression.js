@@ -1025,7 +1025,7 @@ describe('compat factory for', function () {
       const zopfliCompat = proxyquire.noCallThru().load('../zopfli-compat', {
         'node-zopfli-es': mockZop
       });
-      assert.equal(zopfliCompat(), mockZop);
+      assert.equal(zopfliCompat(true), mockZop);
     });
 
     it('returns false if zopfli does not', function () {
@@ -1034,7 +1034,7 @@ describe('compat factory for', function () {
         'node-zopfli-es': null,
         zlib: mockZlib
       });
-      assert.equal(zopfliCompat(), mockZlib);
+      assert.equal(zopfliCompat(true), mockZlib);
     })
   });
 });
