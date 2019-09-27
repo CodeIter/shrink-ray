@@ -1,11 +1,10 @@
 module.exports = getZopfliModule;
 
 function getZopfliModule(useZopfliForGzip) {
-    if(!useZopfliForGzip){
-      return require('zlib')
-    }
     try {
-      return require('node-zopfli-es');
+      if(useZopfliForGzip){
+        return require('node-zopfli-es');
+      }
     } catch (e) {
       process.emitWarning('Module "node-zopfli-es" was unavailable',
         {
