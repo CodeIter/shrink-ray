@@ -2,6 +2,7 @@
 
 /*!
  * compression
+ * Copyright(c) 2019 CodeIter (https://github.com/CodeIter)
  * Copyright(c) 2017 Arturas Molcanovas
  * Copyright(c) 2010 Sencha Inc.
  * Copyright(c) 2011 TJ Holowaychuk
