@@ -28,20 +28,18 @@ const zlib         = require('zlib');
  * Optional dependencies handling. If some binary dependencies cannot build in
  * this environment, or are incompatible with this version of Node, the rest of
  * the module should work!
- * Known dependency issues: 
+ * Known dependency issues:
  *  - node-zopfli-es is not compatible with Node <8.11.
  *  - iltorb is not required for Node >= 11.8, whose zlib has brotli built in.
  */
 
- const brotliCompat = require('./brotli-compat');
- const zopfliCompat = require('./zopfli-compat');
- 
- // These are factory functions because they dynamically require dependencies
- // and may log errors.
- // They need to be tested, so they shouldn't have side effects on load.
- const brotli = brotliCompat();
- let useZopfliForGzip = true;
- let   zopfli = zopfliCompat(useZopfliForGzip);
+const brotliCompat = require('./brotli-compat');
+const zopfliCompat = require('./zopfli-compat');
+
+// These are factory functions because they dynamically require dependencies
+// and may log errors.
+// They need to be tested, so they shouldn't have side effects on load.
+const brotli = brotliCompat();
 
 /**
  * Module exports.
@@ -77,8 +75,7 @@ function compression(options) {
   const opts = options || {};
 
   // options
-  useZopfliForGzip = opts.useZopfliForGzip || useZopfliForGzip;
-  zopfli = zopfliCompat(useZopfliForGzip);
+  const zopfli = zopfliCompat('useZopfliForGzip' in opts ? opts.useZopfliForGzip : true);
   const filter  = opts.filter || shouldCompress;
   let threshold = bytes.parse(opts.threshold);
 
@@ -96,7 +93,7 @@ function compression(options) {
   });
 
   if (!opts.hasOwnProperty('cacheSize')) opts.cacheSize = '128mB';
-  const cache = opts.cacheSize ? createCache(bytes(opts.cacheSize.toString())) : null;
+  const cache = opts.cacheSize ? createCache(bytes(opts.cacheSize.toString()), zopfli) : null;
 
   const shouldCache = opts.cache || stubTrue;
 
@@ -362,7 +359,7 @@ function shouldTransform(req, res) {
          !cacheControlNoTransformRegExp.test(cacheControl);
 }
 
-function createCache(size) {
+function createCache(size, zopfli) {
   const index = {};
   const lru   = new lruCache({
                            max:     size,
@@ -414,7 +411,7 @@ function createCache(size) {
       const result = new BufferWritable();
 
       new BufferReadable(buffer)
-        .pipe(getBestQualityReencoder(coding))
+        .pipe(getBestQualityReencoder(coding, zopfli))
         .pipe(result)
         .on('finish', function () {
           const itemInCache = lru.peek(key);
@@ -492,7 +489,7 @@ BufferDuplex.prototype._write = function (chunk, encoding, callback) {
 
 // get a decode --> encode transform stream that will re-encode the content at
 // the best quality available for that coding method.
-function getBestQualityReencoder(coding) {
+function getBestQualityReencoder(coding, zopfli) {
   switch (coding) {
     case 'gzip':
       return multipipe(zlib.createGunzip(), zopfli.createGzip());
